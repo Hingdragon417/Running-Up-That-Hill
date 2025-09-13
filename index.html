@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Running Up That Hill - Journey of Understanding</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .hill-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(to top, #8b7355 0%, #e6ddd4 50%, #f0f0f0 100%);
+            border-radius: 50% 50% 0 0;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+        
+        .runner {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            transition: all 0.5s ease;
+        }
+        
+        .runner1 {
+            background: #ff6b6b;
+            left: 20%;
+            bottom: 10px;
+        }
+        
+        .runner2 {
+            background: #4ecdc4;
+            right: 20%;
+            bottom: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 1.1em;
+            margin: 20px 0;
+            min-height: 50px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏔️ Running Up That Hill</h1>
+        <p class="subtitle">A Journey of Understanding and Empathy</p>
+        
+        <div class="hill-container">
+            <div class="runner runner1" id="runner1"></div>
+            <div class="runner runner2" id="runner2"></div>
+        </div>
+        
+        <div class="status">
+            <div>
+                <strong>Understanding Progress:</strong>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="understandingBar" style="width: 0%"></div>
+                </div>
+                <span id="understandingPercent">0%</span>
+            </div>
+        </div>
+        
+        <div class="message" id="message">
+            Two people stand at the bottom of a hill, hoping to understand each other better through their shared journey...
+        </div>
+        
+        <div class="controls">
+            <button onclick="startJourney()" id="startBtn">Begin the Journey</button>
+            <button onclick="takeStep()" id="stepBtn" disabled>Take a Step Together</button>
+            <button onclick="listen()" id="listenBtn" disabled>Pause and Listen</button>
+            <button onclick="reset()" id="resetBtn">Start Over</button>
+        </div>
+    </div>
+
+    <script>
+        let runner1Position = 0;
+        let runner2Position = 0;
+        let understanding = 0;
+        let journeyStarted = false;
+        const maxHeight = 250;
+        
+        const messages = [
+            "They begin their ascent, step by step...",
+            "Supporting each other, they climb higher...",
+            "Through shared effort, understanding grows...",
+            "Each step brings new perspective...",
+            "The journey teaches them about empathy...",
+            "Together, they overcome the challenges...",
+            "Their connection strengthens with each moment...",
+            "The summit draws closer as understanding deepens..."
+        ];
+        
+        function updateDisplay() {
+            const runner1 = document.getElementById('runner1');
+            const runner2 = document.getElementById('runner2');
+            const understandingBar = document.getElementById('understandingBar');
+            const understandingPercent = document.getElementById('understandingPercent');
+            
+            // Update runner positions
+            runner1.style.bottom = (10 + runner1Position) + 'px';
+            runner2.style.bottom = (10 + runner2Position) + 'px';
+            
+            // Update understanding
+            understandingBar.style.width = understanding + '%';
+            understandingPercent.textContent = Math.round(understanding) + '%';
+            
+            // Check if journey is complete
+            if (understanding >= 100 || (runner1Position >= maxHeight && runner2Position >= maxHeight)) {
+                completeJourney();
+            }
+        }
+        
+        function startJourney() {
+            journeyStarted = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stepBtn').disabled = false;
+            document.getElementById('listenBtn').disabled = false;
+            
+            document.getElementById('message').textContent = 
+                "The journey begins! Choose how they should proceed together.";
+        }
+        
+        function takeStep() {
+            if (!journeyStarted) return;
+            
+            // Both runners make progress
+            const step1 = Math.random() * 15 + 5;
+            const step2 = Math.random() * 15 + 5;
+            
+            runner1Position = Math.min(maxHeight, runner1Position + step1);
+            runner2Position = Math.min(maxHeight, runner2Position + step2);
+            
+            // Understanding grows through shared experience
+            understanding = Math.min(100, understanding + Math.random() * 8 + 3);
+            
+            const messageIndex = Math.floor(Math.random() * messages.length);
+            document.getElementById('message').textContent = messages[messageIndex];
+            
+            updateDisplay();
+        }
+        
+        function listen() {
+            if (!journeyStarted) return;
+            
+            // Listening increases understanding more than steps
+            understanding = Math.min(100, understanding + Math.random() * 12 + 8);
+            
+            // Small position gain from deeper connection
+            const insight = Math.random() * 8 + 2;
+            runner1Position = Math.min(maxHeight, runner1Position + insight);
+            runner2Position = Math.min(maxHeight, runner2Position + insight);
+            
+            document.getElementById('message').textContent = 
+                "They pause to truly listen to each other. Understanding deepens...";
+            
+            updateDisplay();
+        }
+        
+        function completeJourney() {
+            document.getElementById('stepBtn').disabled = true;
+            document.getElementById('listenBtn').disabled = true;
+            
+            let completionMessage;
+            if (understanding >= 90) {
+                completionMessage = "🌟 Incredible! They've achieved deep mutual understanding and reached new heights together!";
+            } else if (understanding >= 70) {
+                completionMessage = "✨ Wonderful! Their journey has brought them much closer and they understand each other well.";
+            } else if (understanding >= 50) {
+                completionMessage = "🌱 Good progress! They've learned valuable lessons about seeing through each other's eyes.";
+            } else {
+                completionMessage = "💫 Every journey begins with a single step. They've started the important work of understanding.";
+            }
+            
+            document.getElementById('message').textContent = completionMessage;
+        }
+        
+        function reset() {
+            runner1Position = 0;
+            runner2Position = 0;
+            understanding = 0;
+            journeyStarted = false;
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stepBtn').disabled = true;
+            document.getElementById('listenBtn').disabled = true;
+            
+            document.getElementById('message').textContent = 
+                "Two people stand at the bottom of a hill, hoping to understand each other better through their shared journey...";
+            
+            updateDisplay();
+        }
+        
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>
