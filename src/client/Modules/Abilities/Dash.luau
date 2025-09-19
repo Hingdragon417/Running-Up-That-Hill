@@ -1,8 +1,12 @@
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local Debris = game:GetService("Debris")
 
 local player = Players.LocalPlayer
+
+local dashAnimId = "rbxassetid://115260988089288"
+local dashAnim = Instance.new("Animation")
+dashAnim.AnimationId = dashAnimId
 
 local Dash = {}
 
@@ -18,45 +22,42 @@ function Dash.Execute()
     if not humanoid or not rootPart then
         return false
     end
+
+    local animTrack = humanoid:LoadAnimation(dashAnim)
+    animTrack:Play()
     
-    local dashDistance = 25
-    local dashDuration = 0.3
+    local dashDistance = 25  -- Reduced from 50 to about half
+    local dashDuration = 0.15 -- Reduced from 0.25 to about half
     
     local lookDirection = rootPart.CFrame.LookVector
     local startPosition = rootPart.Position
     
-    -- Cast a ray downward from the target position to find the ground
-    local targetPosition = startPosition + (lookDirection * dashDistance)
-    local downwardRay = RaycastParams.new()
-    downwardRay.FilterType = Enum.RaycastFilterType.Blacklist
-    downwardRay.FilterDescendantsInstances = {character}
+    -- Calculate a much higher velocity for more noticeable movement
+    local dashVelocity = (dashDistance / dashDuration) * 1.5  -- Added 1.5x multiplier
+    local velocityVector = lookDirection * dashVelocity
     
-    -- Cast ray from high above the target position downward
-    local highPoint = targetPosition + Vector3.new(0, 50, 0)
-    local groundResult = workspace:Raycast(highPoint, Vector3.new(0, -100, 0), downwardRay)
+    -- Store original velocity to restore later
+    local originalVelocity = rootPart.AssemblyLinearVelocity
     
-    local finalPosition
-    if groundResult then
-        -- Position slightly above the ground
-        finalPosition = groundResult.Position + Vector3.new(0, 3, 0)
-    else
-        -- If no ground found, use original target position
-        finalPosition = targetPosition
-    end
-    
-    local finalCFrame = CFrame.new(finalPosition, finalPosition + lookDirection)
-    
-    local tweenInfo = TweenInfo.new(
-        dashDuration,
-        Enum.EasingStyle.Quad,
-        Enum.EasingDirection.Out,
-        0,
-        false,
-        0
+    -- Apply the dash velocity with a slight upward boost to help with obstacles
+    rootPart.AssemblyLinearVelocity = Vector3.new(
+        velocityVector.X, 
+        math.max(originalVelocity.Y, 10), -- Ensure minimum upward velocity
+        velocityVector.Z
     )
     
-    local tween = TweenService:Create(rootPart, tweenInfo, {CFrame = finalCFrame})
-    tween:Play()
+    -- Create a connection to stop the dash after the duration
+    local connection
+    connection = task.delay(dashDuration, function()
+        if rootPart and rootPart.Parent then
+            -- Restore a more natural velocity (reduced but not completely stopped)
+            rootPart.AssemblyLinearVelocity = Vector3.new(
+                originalVelocity.X * 0.1, 
+                rootPart.AssemblyLinearVelocity.Y, 
+                originalVelocity.Z * 0.1
+            )
+        end
+    end)
     
     return true
 end

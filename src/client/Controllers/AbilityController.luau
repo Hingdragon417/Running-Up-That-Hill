@@ -25,23 +25,26 @@ local centerFrame = utilityFrame:WaitForChild("Center")
 local abilityTemplate = ReplicatedStorage:WaitForChild("Assets"):WaitForChild("UIAssets"):WaitForChild("AbilityTemplate")
 
 local keyBindings = {
-    [Enum.KeyCode.F] = "Slot1",
+    [Enum.KeyCode.R] = "Slot1",  -- Changed from F to R
     [Enum.KeyCode.Q] = "Slot2", 
     [Enum.KeyCode.E] = "Slot3"
 }
 
 function AbilityController:UseAbility(slotName)
     local playerData = DataController.getData()
+    
     if not playerData or not playerData.Abilities then
         return
     end
     
     local abilitySlot = playerData.Abilities[slotName]
+    
     if not abilitySlot or abilitySlot.Name == "" or abilitySlot.Quantity <= 0 then
         return
     end
     
     local abilityData = AbilityEnums[abilitySlot.Name]
+    
     if not abilityData then
         return
     end
@@ -51,7 +54,7 @@ function AbilityController:UseAbility(slotName)
             self:PerformAbilityEffect(abilitySlot.Name, abilityData)
         end
     end):catch(function(err)
-        warn("Failed to use ability:", err)
+        -- Handle error silently
     end)
 end
 
@@ -61,50 +64,55 @@ function AbilityController:UpdateAbilityUI()
         return
     end
     
-    for _, child in pairs(centerFrame:GetChildren()) do
-        if child:IsA("GuiObject") and child.Name:find("AbilitySlot") then
-            child:Destroy()
+    -- Attempt to update UI - fail silently if UI not available
+    pcall(function()
+        -- Cleanup existing UI elements
+        for _, child in pairs(centerFrame:GetChildren()) do
+            if child:IsA("GuiObject") and child.Name:find("AbilitySlot") then
+                child:Destroy()
+            end
         end
-    end
-    
-    for slotName, abilitySlot in pairs(playerData.Abilities) do
-        if abilitySlot.Name ~= "" and abilitySlot.Quantity > 0 then
-            local abilityData = AbilityEnums[abilitySlot.Name]
-            if abilityData then
-                local newTemplate = abilityTemplate:Clone()
-                newTemplate.Name = "AbilitySlot" .. slotName
-                newTemplate.Visible = true
-                newTemplate.Parent = centerFrame
-                
-                local imageLabel = newTemplate:FindFirstChild("ImageLabel")
-                if imageLabel then
-                    imageLabel.Image = "rbxassetid://" .. abilityData.Image
-                end
-                
-                local keybindLabel = newTemplate:FindFirstChild("Keybind")
-                if keybindLabel then
-                    for keyCode, slot in pairs(keyBindings) do
-                        if slot == slotName then
-                            keybindLabel.Text = keyCode.Name
-                            break
+        
+        -- Create new UI elements
+        for slotName, abilitySlot in pairs(playerData.Abilities) do
+            if abilitySlot.Name ~= "" and abilitySlot.Quantity > 0 then
+                local abilityData = AbilityEnums[abilitySlot.Name]
+                if abilityData then
+                    local newTemplate = abilityTemplate:Clone()
+                    newTemplate.Name = "AbilitySlot" .. slotName
+                    newTemplate.Visible = true
+                    newTemplate.Parent = centerFrame
+                    
+                    local imageLabel = newTemplate:FindFirstChild("ImageLabel")
+                    if imageLabel then
+                        imageLabel.Image = "rbxassetid://" .. abilityData.Image
+                    end
+                    
+                    local keybindLabel = newTemplate:FindFirstChild("Keybind")
+                    if keybindLabel then
+                        for keyCode, slot in pairs(keyBindings) do
+                            if slot == slotName then
+                                keybindLabel.Text = keyCode.Name
+                                break
+                            end
                         end
                     end
-                end
-                
-                local quantityLabel = newTemplate:FindFirstChild("Quantity")
-                if quantityLabel then
-                    quantityLabel.Text = "x" .. abilitySlot.Quantity
+                    
+                    local quantityLabel = newTemplate:FindFirstChild("Quantity")
+                    if quantityLabel then
+                        quantityLabel.Text = "x" .. abilitySlot.Quantity
+                    end
                 end
             end
         end
-    end
+    end)
 end
 
 function AbilityController:PerformAbilityEffect(abilityName, abilityData)
-    print("Using ability:", abilityName)
+    local modulePath = script.Parent.Parent.Modules.Abilities[abilityName]
     
     local success, abilityModule = pcall(function()
-        return require(script.Parent.Parent.Modules.Abilities[abilityName])
+        return require(modulePath)
     end)
     
     if success and abilityModule and abilityModule.Execute then
@@ -115,19 +123,11 @@ function AbilityController:PerformAbilityEffect(abilityName, abilityData)
         else
             abilityModule.Execute()
         end
-    else
-        warn("Ability module not found or invalid:", abilityName)
     end
 end
 
 function AbilityController:KnitStart()
-    DataController.onReplicated("Abilities"):Connect(function()
-        self:UpdateAbilityUI()
-    end)
-    
-    task.wait(1)
-    self:UpdateAbilityUI()
-    
+    -- Key bindings - completely independent of UI
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed then
             return
@@ -138,6 +138,15 @@ function AbilityController:KnitStart()
             self:UseAbility(slotName)
         end
     end)
+    
+    -- UI updates only when data changes
+    DataController.onReplicated("Abilities"):Connect(function()
+        self:UpdateAbilityUI()
+    end)
+    
+    task.wait(1)
+    -- Initial UI update
+    self:UpdateAbilityUI()
 end
 
 function AbilityController:KnitInit()

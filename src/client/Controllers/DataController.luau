@@ -83,8 +83,6 @@ function DataController.onReplicate(data: { [string]: any }, index: string?)
 		end
 	else
 		DataController._cache = data
-
-		print("Initial data received", data)
 	end
 end
 

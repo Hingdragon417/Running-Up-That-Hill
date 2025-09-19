@@ -42,7 +42,7 @@ function ShopController:UpdateTimerDisplay()
         local timeLeft = playerData.RestockTimer
         if timeLeft > 0 then
             timerLabel.Text = "Next Restock: " .. self:FormatTime(timeLeft)
-        else
+        elseif timeLeft <= 0 then
             timerLabel.Text = "Shop Restocked!"
         end
     else
@@ -60,7 +60,6 @@ function ShopController:UpdateShopUI()
     local playerData = DataController.getData()
     
     if playerData and playerData.Shop then
-        
         -- Count items in shop
         local itemCount = 0
         for abilityName, stockAmount in pairs(playerData.Shop) do

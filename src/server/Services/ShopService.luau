@@ -81,30 +81,22 @@ function ShopService:GenerateShopItems()
 end
 
 function ShopService.Client:PurchaseAbility(player, abilityName)
-    print("PurchaseAbility called for", player.Name, "ability:", abilityName)
-    
     local session = DataService.getSession(player)
     if not session or not session.Data then
-        print("No player data found for", player.Name)
         return false, "No player data found"
     end
     
     local abilityData = AbilityEnums[abilityName]
     if not abilityData then
-        print("Ability not found:", abilityName)
         return false, "Ability not found"
     end
     
     local currentStock = session.Data.Shop[abilityName]
-    print("Current stock for", abilityName, ":", currentStock)
     if not currentStock or currentStock <= 0 then
-        print("Out of stock for", abilityName)
         return false, "Out of stock or not available"
     end
     
-    print("Player cash:", session.Data.Cash, "Ability price:", abilityData.Price)
     if session.Data.Cash < abilityData.Price then
-        print("Not enough cash for", abilityName)
         return false, "Not enough cash"
     end
     
@@ -128,9 +120,7 @@ function ShopService.Client:PurchaseAbility(player, abilityName)
         end
     end
     
-    print("Available slot for", abilityName, ":", availableSlot)
     if not availableSlot then
-        print("No available ability slots")
         return false, "No available ability slots"
     end
     
@@ -139,68 +129,60 @@ function ShopService.Client:PurchaseAbility(player, abilityName)
     
     if session.Data.Abilities[availableSlot].Name == abilityName then
         session.Data.Abilities[availableSlot].Quantity = session.Data.Abilities[availableSlot].Quantity + 1
-        print("Added quantity to existing ability in", availableSlot)
     else
         session.Data.Abilities[availableSlot].Name = abilityName
         session.Data.Abilities[availableSlot].Quantity = 1
-        print("Equipped new ability", abilityName, "in", availableSlot)
     end
     
     DataService:Replicate(player, {"Cash", "Abilities", "Shop"})
     
-    print("Purchase successful for", abilityName)
     return true, "Purchase successful"
 end
 
 function ShopService:UpdatePlayerShops(shopItems)
-    print("UpdatePlayerShops called with", #shopItems, "items")
-    for _, item in pairs(shopItems) do
-        print("  - Item:", item.name, "Stock:", item.data.Stock)
-    end
-    
     for _, player in pairs(Players:GetPlayers()) do
-        print("Checking player:", player.Name)
         local session = DataService.getSession(player)
         
         if session then
-            print("Session found for", player.Name)
-            if session.Data then
-                print("Current shop data:", session.Data.Shop)
-                
+            if session.Data then                
                 -- Check if shop is in old array format and force reset
                 local needsReset = false
                 if session.Data.Shop then
                     -- Check if it's an array (old format) instead of a dictionary (new format)
                     if #session.Data.Shop > 0 then
-                        print("Shop is in old array format, forcing reset")
                         needsReset = true
                     elseif next(session.Data.Shop) == nil then
-                        print("Shop is empty, populating...")
                         needsReset = true
                     end
                 else
-                    print("Shop doesn't exist, creating...")
                     needsReset = true
                 end
                 
                 if needsReset then
                     session.Data.Shop = {}
                     session.Data.RestockTimer = 15 * 60
-                    
                     for _, item in pairs(shopItems) do
                         session.Data.Shop[item.name] = item.data.Stock
-                        print("Added to shop:", item.name, "=", item.data.Stock)
                     end
-                    print("Final shop data:", session.Data.Shop)
                     DataService:Replicate(player, {"Shop", "RestockTimer"})
-                else
-                    print("Shop already properly populated for", player.Name)
                 end
-            else
-                print("No session.Data for", player.Name)
             end
         else
-            print("No session found for", player.Name)
+            -- Retry after a delay for players without sessions
+            task.spawn(function()
+                task.wait(2) -- Wait 2 seconds for session to load
+                local retrySession = DataService.getSession(player)
+                if retrySession and retrySession.Data then
+                    if not retrySession.Data.Shop or next(retrySession.Data.Shop) == nil then
+                        retrySession.Data.Shop = {}
+                        retrySession.Data.RestockTimer = 15 * 60
+                        for _, item in pairs(shopItems) do
+                            retrySession.Data.Shop[item.name] = item.data.Stock
+                        end
+                        DataService:Replicate(player, {"Shop", "RestockTimer"})
+                    end
+                end
+            end)
         end
     end
 end
