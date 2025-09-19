@@ -42,13 +42,12 @@ end
 
 function HeightController:KnitStart()
 	local RampService = Knit.GetService("RampService")
-	local calculatedHeight = 1000 -- Default fallback
+	local calculatedHeight = 1000 
 
 	task.wait(1) 
 
 	RampService:GetTotalHeight():andThen(function(height)
 		calculatedHeight = height
-		print("Using calculated ramp height:", calculatedHeight)
 	end):catch(function(err)
 		warn("Failed to get calculated height:", err)
 	end)

@@ -10,7 +10,6 @@ do
 
     Knit.Start()
         :andThen(function()
-            print("Client has started!")
         end)
         :catch(warn)
 end

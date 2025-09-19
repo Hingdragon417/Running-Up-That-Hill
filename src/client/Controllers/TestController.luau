@@ -9,11 +9,9 @@ local TestController = Knit.CreateController({
 })
 
 function TestController:KnitStart() 
-    print("start")
 end
 
 function TestController:KnitInit()
-    print("init")
 end
 
 return TestController

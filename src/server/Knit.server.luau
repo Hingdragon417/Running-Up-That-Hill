@@ -9,7 +9,6 @@ do
 
     Knit.Start()
         :andThen(function()
-            print("Server has started!")
         end)
         :catch(warn)
 end

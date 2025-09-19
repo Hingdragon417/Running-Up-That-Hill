@@ -55,18 +55,13 @@ function RampService:CreateRamp()
             highestY = math.max(highestY, nextPos.Y)
         end
         
-        print("Ramp", i, "Y position:", nextPos.Y)
-        
         local newRamp = RampModel:Clone()
         newRamp.Parent = RampFolder
         
         local newCFrame = CFrame.new(nextPos) * (originalCFrame - originalCFrame.Position)
         newRamp:PivotTo(newCFrame)
     end
-
-    calculatedTotalHeight = highestY + (ySize * 2.8) 
-    print("Actual highest ramp Y:", highestY)
-    print("Total ramp structure height from ground:", calculatedTotalHeight, "studs")
+    calculatedTotalHeight = highestY + (ySize / 1.2)
 end
 
 function RampService.Client:GetTotalHeight(player)
