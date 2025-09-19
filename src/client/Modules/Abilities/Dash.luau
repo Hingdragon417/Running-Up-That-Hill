@@ -26,31 +26,47 @@ function Dash.Execute()
     local animTrack = humanoid:LoadAnimation(dashAnim)
     animTrack:Play()
     
-    local dashDistance = 25  -- Reduced from 50 to about half
-    local dashDuration = 0.15 -- Reduced from 0.25 to about half
+    local dashDistance = 25
+    local dashDuration = 0.15
     
     local lookDirection = rootPart.CFrame.LookVector
     local startPosition = rootPart.Position
     
-    -- Calculate a much higher velocity for more noticeable movement
-    local dashVelocity = (dashDistance / dashDuration) * 1.5  -- Added 1.5x multiplier
-    local velocityVector = lookDirection * dashVelocity
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    rayParams.FilterDescendantsInstances = {character}
     
-    -- Store original velocity to restore later
+    local forwardRay = workspace:Raycast(startPosition + Vector3.new(0, 2, 0), lookDirection * 15, rayParams)
+    
+    local dashVelocity = (dashDistance / dashDuration) * 2.5
+    local finalVelocity = lookDirection * dashVelocity
+    
+    if forwardRay then
+        local surfaceNormal = forwardRay.Normal
+        local rampAngle = math.acos(math.clamp(surfaceNormal:Dot(Vector3.new(0, 1, 0)), -1, 1))
+        
+        if rampAngle > math.rad(5) and rampAngle < math.rad(75) then
+            local rampDirection = (lookDirection - lookDirection:Dot(surfaceNormal) * surfaceNormal).Unit
+            local upSlope = Vector3.new(0, 1, 0):Cross(surfaceNormal):Cross(surfaceNormal).Unit
+            
+            if lookDirection:Dot(upSlope) > 0 then
+                finalVelocity = upSlope * dashVelocity * 1.5
+                finalVelocity = finalVelocity + Vector3.new(0, 50, 0)
+            end
+        end
+    end
+    
     local originalVelocity = rootPart.AssemblyLinearVelocity
     
-    -- Apply the dash velocity with a slight upward boost to help with obstacles
     rootPart.AssemblyLinearVelocity = Vector3.new(
-        velocityVector.X, 
-        math.max(originalVelocity.Y, 10), -- Ensure minimum upward velocity
-        velocityVector.Z
+        finalVelocity.X, 
+        math.max(finalVelocity.Y, 30),
+        finalVelocity.Z
     )
     
-    -- Create a connection to stop the dash after the duration
     local connection
     connection = task.delay(dashDuration, function()
         if rootPart and rootPart.Parent then
-            -- Restore a more natural velocity (reduced but not completely stopped)
             rootPart.AssemblyLinearVelocity = Vector3.new(
                 originalVelocity.X * 0.1, 
                 rootPart.AssemblyLinearVelocity.Y, 

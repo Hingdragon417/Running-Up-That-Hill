@@ -60,6 +60,7 @@ function ShopController:UpdateShopUI()
     local playerData = DataController.getData()
     
     if playerData and playerData.Shop then
+        
         -- Count items in shop
         local itemCount = 0
         for abilityName, stockAmount in pairs(playerData.Shop) do

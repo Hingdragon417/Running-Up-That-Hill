@@ -23,6 +23,10 @@ function DataController.waitForData(): Types.Data
 end
 
 function DataController.getData(): Types.Data?
+	print("DataController.getData called, cache:", DataController._cache and "EXISTS" or "NIL")
+	if DataController._cache and DataController._cache.Abilities then
+		print("Abilities in cache:", DataController._cache.Abilities)
+	end
 	return DataController._cache
 end
 
@@ -67,23 +71,33 @@ function DataController.onReplicated(checkIndex: string | { string })
 end
 
 function DataController.onReplicate(data: { [string]: any }, index: string?)
+	print("=== DataController.onReplicate ===")
+	print("Data:", data)
+	print("Index:", index)
+	
 	if DataController._cache then
+		print("Cache exists, updating...")
 		if index then
 			if type(data) == "table" then
 				DataController.reconcileTables(DataController._cache[index], data)
 			else
 				DataController._cache[index] = data
 			end
+			print("Updated cache[" .. index .. "]:", DataController._cache[index])
 		else
 			DataController.reconcileTables(DataController._cache, data)
 		end
 
 		if index then
+			print("Firing onReplicate signal for index:", index)
 			DataController._onReplicate:Fire(index)
 		end
 	else
+		print("No cache, setting initial data")
 		DataController._cache = data
+		print("Initial data received", data)
 	end
+	print("Cache after update:", DataController._cache)
 end
 
 function DataController:KnitStart()

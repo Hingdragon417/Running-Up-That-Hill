@@ -16,7 +16,7 @@ local DATA_TEMPLATE = require(Shared.Data.Template)
 
 --// Constants
 local IS_STUDIO = RunService:IsStudio()
-local STORE_NAME = if IS_STUDIO then "TESTSTUDIO1s21s223222s22s22ss2s21211" else "TESTGAME11s111"
+local STORE_NAME = if IS_STUDIO then "TESTSTUDIO112232222222s221211" else "TESTGAME11s111"
 local STORE_VERSION = if IS_STUDIO then "1.2.7" else "1.1.0"
 local METADATA_INDEX_VERSION = if IS_STUDIO then "STUDIO_DATA_VERSION" else "GAME_DATA_VERSION"
 local SHOULD_SAVE = true
@@ -128,6 +128,13 @@ function DataService:UseAbility(player: Player, slotName: string)
 	if not session or not session.Data then
 		return false, "No session data found"
 	end
+	
+	-- Print all ability slots and their quantities
+	print("=== Ability Slots for", player.Name, "===")
+	for slotName, slotData in pairs(session.Data.Abilities) do
+		print("Slot:", slotName, "| Name:", slotData.Name, "| Quantity:", slotData.Quantity)
+	end
+	print("=====================================")
 	
 	local abilitySlot = session.Data.Abilities[slotName]
 	if not abilitySlot then

@@ -1,7 +1,7 @@
 return {
 	["Dash"] = {
 		Image = 16071029634,
-		Stock = 3,
+		Stock = 30,
 		Price = 250,
 		Chance = 85,
         Cooldown = 3,
