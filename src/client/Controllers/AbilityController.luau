@@ -46,10 +46,8 @@ function AbilityController:UseAbility(slotName)
         return
     end
     
-    -- Call server to use the ability and reduce quantity
     DataService:UseAbility(slotName):andThen(function(success, message)
         if success then
-            -- Ability used successfully, perform client-side effects
             self:PerformAbilityEffect(abilitySlot.Name, abilityData)
         end
     end):catch(function(err)
@@ -63,14 +61,12 @@ function AbilityController:UpdateAbilityUI()
         return
     end
     
-    -- Clear existing ability UI elements
     for _, child in pairs(centerFrame:GetChildren()) do
         if child:IsA("GuiObject") and child.Name:find("AbilitySlot") then
             child:Destroy()
         end
     end
     
-    -- Create UI for each ability slot that has an ability with quantity > 0
     for slotName, abilitySlot in pairs(playerData.Abilities) do
         if abilitySlot.Name ~= "" and abilitySlot.Quantity > 0 then
             local abilityData = AbilityEnums[abilitySlot.Name]
@@ -80,16 +76,13 @@ function AbilityController:UpdateAbilityUI()
                 newTemplate.Visible = true
                 newTemplate.Parent = centerFrame
                 
-                -- Update the image
                 local imageLabel = newTemplate:FindFirstChild("ImageLabel")
                 if imageLabel then
                     imageLabel.Image = "rbxassetid://" .. abilityData.Image
                 end
                 
-                -- Update the keybind text
                 local keybindLabel = newTemplate:FindFirstChild("Keybind")
                 if keybindLabel then
-                    -- Find the keybind for this slot from the keyBindings table
                     for keyCode, slot in pairs(keyBindings) do
                         if slot == slotName then
                             keybindLabel.Text = keyCode.Name
@@ -98,7 +91,6 @@ function AbilityController:UpdateAbilityUI()
                     end
                 end
                 
-                -- Update the quantity text
                 local quantityLabel = newTemplate:FindFirstChild("Quantity")
                 if quantityLabel then
                     quantityLabel.Text = "x" .. abilitySlot.Quantity
@@ -109,26 +101,30 @@ function AbilityController:UpdateAbilityUI()
 end
 
 function AbilityController:PerformAbilityEffect(abilityName, abilityData)
-    -- Here you would implement the actual ability logic
-    -- For now, just print the ability being used
     print("Using ability:", abilityName)
     
-    -- TODO: Add specific ability effects based on abilityName
-    -- Examples:
-    -- if abilityName == "Double Jump" then
-    --     -- Enable double jump for player
-    -- elseif abilityName == "Speed Boost" then
-    --     -- Apply speed boost to player
-    -- end
+    local success, abilityModule = pcall(function()
+        return require(script.Parent.Parent.Modules.Abilities[abilityName])
+    end)
+    
+    if success and abilityModule and abilityModule.Execute then
+        if abilityName == "Invisibility" then
+            task.spawn(function()
+                abilityModule.Execute()
+            end)
+        else
+            abilityModule.Execute()
+        end
+    else
+        warn("Ability module not found or invalid:", abilityName)
+    end
 end
 
 function AbilityController:KnitStart()
-    -- Connect to ability data changes
     DataController.onReplicated("Abilities"):Connect(function()
         self:UpdateAbilityUI()
     end)
     
-    -- Initial UI update
     task.wait(1)
     self:UpdateAbilityUI()
     
