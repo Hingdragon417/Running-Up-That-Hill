@@ -16,7 +16,7 @@ local DATA_TEMPLATE = require(Shared.Data.Template)
 
 --// Constants
 local IS_STUDIO = RunService:IsStudio()
-local STORE_NAME = if IS_STUDIO then "TESTSTUDIO112111" else "TESTGAME11111"
+local STORE_NAME = if IS_STUDIO then "TESTSTUDIO112221211" else "TESTGAME11111"
 local STORE_VERSION = if IS_STUDIO then "1.2.7" else "1.1.0"
 local METADATA_INDEX_VERSION = if IS_STUDIO then "STUDIO_DATA_VERSION" else "GAME_DATA_VERSION"
 local SHOULD_SAVE = true
@@ -121,6 +121,51 @@ function DataService:Replicate(player: Player, index: (string | { string })?)
 			end
 		end
 	end
+end
+
+function DataService:UseAbility(player: Player, slotName: string)
+	local session = self.getSession(player)
+	if not session or not session.Data then
+		return false, "No session data found"
+	end
+	
+	-- Print all ability slots and their quantities
+	print("=== Ability Slots for", player.Name, "===")
+	for slotName, slotData in pairs(session.Data.Abilities) do
+		print("Slot:", slotName, "| Name:", slotData.Name, "| Quantity:", slotData.Quantity)
+	end
+	print("=====================================")
+	
+	local abilitySlot = session.Data.Abilities[slotName]
+	if not abilitySlot then
+		return false, "Ability slot not found"
+	end
+	
+	if abilitySlot.Name == "" then
+		return false, "No ability equipped in this slot"
+	end
+	
+	if abilitySlot.Quantity <= 0 then
+		return false, "No quantity remaining for this ability"
+	end
+	
+	-- Reduce quantity by 1
+	abilitySlot.Quantity = abilitySlot.Quantity - 1
+	
+	-- If quantity reaches 0, clear the slot
+	if abilitySlot.Quantity <= 0 then
+		abilitySlot.Name = ""
+		abilitySlot.Quantity = 0
+	end
+	
+	-- Replicate the updated abilities data
+	self:Replicate(player, "Abilities")
+	
+	return true, "Ability used successfully"
+end
+
+function DataService.Client:UseAbility(player: Player, slotName: string)
+	return DataService:UseAbility(player, slotName)
 end
 
 function DataService.onPlayerRemoving(player: Player)

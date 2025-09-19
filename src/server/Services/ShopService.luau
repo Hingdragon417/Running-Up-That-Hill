@@ -81,22 +81,30 @@ function ShopService:GenerateShopItems()
 end
 
 function ShopService.Client:PurchaseAbility(player, abilityName)
+    print("PurchaseAbility called for", player.Name, "ability:", abilityName)
+    
     local session = DataService.getSession(player)
     if not session or not session.Data then
+        print("No player data found for", player.Name)
         return false, "No player data found"
     end
     
     local abilityData = AbilityEnums[abilityName]
     if not abilityData then
+        print("Ability not found:", abilityName)
         return false, "Ability not found"
     end
     
     local currentStock = session.Data.Shop[abilityName]
+    print("Current stock for", abilityName, ":", currentStock)
     if not currentStock or currentStock <= 0 then
+        print("Out of stock for", abilityName)
         return false, "Out of stock or not available"
     end
     
+    print("Player cash:", session.Data.Cash, "Ability price:", abilityData.Price)
     if session.Data.Cash < abilityData.Price then
+        print("Not enough cash for", abilityName)
         return false, "Not enough cash"
     end
     
@@ -116,7 +124,9 @@ function ShopService.Client:PurchaseAbility(player, abilityName)
         end
     end
     
+    print("Available slot for", abilityName, ":", availableSlot)
     if not availableSlot then
+        print("No available ability slots")
         return false, "No available ability slots"
     end
     
@@ -125,13 +135,16 @@ function ShopService.Client:PurchaseAbility(player, abilityName)
     
     if session.Data.Abilities[availableSlot].Name == abilityName then
         session.Data.Abilities[availableSlot].Quantity = session.Data.Abilities[availableSlot].Quantity + 1
+        print("Added quantity to existing ability in", availableSlot)
     else
         session.Data.Abilities[availableSlot].Name = abilityName
         session.Data.Abilities[availableSlot].Quantity = 1
+        print("Equipped new ability", abilityName, "in", availableSlot)
     end
     
     DataService:Replicate(player, {"Cash", "Abilities", "Shop"})
     
+    print("Purchase successful for", abilityName)
     return true, "Purchase successful"
 end
 
