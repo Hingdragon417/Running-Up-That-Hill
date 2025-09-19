@@ -87,7 +87,7 @@ function AbilityController:UpdateAbilityUI()
                 end
                 
                 -- Update the keybind text
-                local keybindLabel = newTemplate:FindFirstChild("KeybindLabel")
+                local keybindLabel = newTemplate:FindFirstChild("Keybind")
                 if keybindLabel then
                     -- Find the keybind for this slot from the keyBindings table
                     for keyCode, slot in pairs(keyBindings) do
@@ -99,7 +99,7 @@ function AbilityController:UpdateAbilityUI()
                 end
                 
                 -- Update the quantity text
-                local quantityLabel = newTemplate:FindFirstChild("QuantityLabel")
+                local quantityLabel = newTemplate:FindFirstChild("Quantity")
                 if quantityLabel then
                     quantityLabel.Text = "x" .. abilitySlot.Quantity
                 end

@@ -109,18 +109,22 @@ function ShopService.Client:PurchaseAbility(player, abilityName)
     end
     
     local availableSlot = nil
-    if session.Data.Abilities.Slot1.Name == "" then
-        availableSlot = "Slot1"
-    elseif session.Data.Abilities.Slot2.Name == "" then
-        availableSlot = "Slot2"
-    elseif session.Data.Abilities.Slot3.Name == "" then
-        availableSlot = "Slot3"
-    else
-        for _, slot in pairs({"Slot1", "Slot2", "Slot3"}) do
-            if session.Data.Abilities[slot].Name == abilityName then
-                availableSlot = slot
-                break
-            end
+    -- First, check if we already have this ability equipped somewhere
+    for _, slot in pairs({"Slot1", "Slot2", "Slot3"}) do
+        if session.Data.Abilities[slot].Name == abilityName then
+            availableSlot = slot
+            break
+        end
+    end
+    
+    -- If we don't have it equipped, find an empty slot
+    if not availableSlot then
+        if session.Data.Abilities.Slot1.Name == "" then
+            availableSlot = "Slot1"
+        elseif session.Data.Abilities.Slot2.Name == "" then
+            availableSlot = "Slot2"
+        elseif session.Data.Abilities.Slot3.Name == "" then
+            availableSlot = "Slot3"
         end
     end
     

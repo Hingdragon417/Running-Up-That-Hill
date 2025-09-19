@@ -16,7 +16,7 @@ local DATA_TEMPLATE = require(Shared.Data.Template)
 
 --// Constants
 local IS_STUDIO = RunService:IsStudio()
-local STORE_NAME = if IS_STUDIO then "TESTSTUDIO112221211" else "TESTGAME11111"
+local STORE_NAME = if IS_STUDIO then "TESTSTUDIO1122221211" else "TESTGAME11111"
 local STORE_VERSION = if IS_STUDIO then "1.2.7" else "1.1.0"
 local METADATA_INDEX_VERSION = if IS_STUDIO then "STUDIO_DATA_VERSION" else "GAME_DATA_VERSION"
 local SHOULD_SAVE = true
